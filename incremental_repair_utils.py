@@ -154,6 +154,14 @@ def uuv_barriered_energy(bad_states, good_states, net, lambda_=1.0):
     return lambda_ * np.mean(h_robustness_bad) + np.mean(log_barriers), h_robustness_bad, h_robustness_good
 
 
+def uuv_energy(bad_states, net):
+    h_robustness_bad = []
+    for bad_state in bad_states:
+        _, traj_y_bad = uuv_simulate(net=net, init_pos_y=bad_state[0], init_global_heading_deg=bad_state[1])
+        h_robustness_bad += [uuv_robustness(traj_y_bad)]
+    return np.mean(h_robustness_bad)
+
+
 """ MC utils """
 
 
@@ -203,6 +211,15 @@ def mc_barriered_energy(bad_states, good_states, net, lambda_=1.0):
         log_barriers += [log_barrier]
 
     return lambda_ * np.mean(h_robustness_bad) + np.mean(log_barriers), h_robustness_bad, h_robustness_good
+
+
+# Objective function
+def mc_energy(bad_states, net):
+    h_robustness_bad = []
+    for bad_state in bad_states:
+        traj_pos_bad, _ = mc_simulate(bad_state[0], bad_state[1], net)
+        h_robustness_bad += [mc_robustness(traj_pos_bad)]
+    return np.mean(h_robustness_bad)
 
 
 """ Other utils """

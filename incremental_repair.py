@@ -1,11 +1,10 @@
 import os
-import time
 import argparse
-from incremental_repair_utils import *
+from ibcl_convex_comb import *
 
 
-# Safeguarded simulated annealing, which attemps to repair one region while preserving others
-def safeguarded_simulated_annealing(region_id, net, bad_states, good_states, std=0.1, T=0.1, alpha=0.95, num_iter=50, benchmark='uuv'):
+# Simulated annealing subroutine
+def simulated_annealing(region_id, net, bad_states, std=0.1, T=0.1, alpha=0.95, num_iter=200, benchmark='uuv'):
 
     start_time = time.time()
 
@@ -13,9 +12,9 @@ def safeguarded_simulated_annealing(region_id, net, bad_states, good_states, std
     # task_name = f'iter_{iter_num}_region_{region_id}'
 
     if benchmark == 'uuv':
-        current_obj_value, h_robusntess_bad, h_robustness_good = uuv_barriered_energy(bad_states, good_states, net)
+        current_obj_value = uuv_energy(bad_states, net)
     elif benchmark == 'mc':
-        current_obj_value, h_robusntess_bad, h_robustness_good = mc_barriered_energy(bad_states, good_states, net)
+        current_obj_value = mc_energy(bad_states, net)
     else:
         raise NotImplementedError
 
@@ -30,26 +29,19 @@ def safeguarded_simulated_annealing(region_id, net, bad_states, good_states, std
             param.data += noise
 
         if benchmark == 'uuv':
-            new_obj_value, new_h_robustness_bad, new_h_robustness_good = uuv_barriered_energy(bad_states, good_states, net)
+            new_obj_value = uuv_energy(bad_states, net)
         elif benchmark == 'mc':
-            new_obj_value, new_h_robustness_bad, new_h_robustness_good = mc_barriered_energy(bad_states, good_states, net)
+            new_obj_value = mc_energy(bad_states, net)
         else:
             raise NotImplementedError
 
-        if np.min(new_h_robustness_good) < 0.0:
-            print("Rejected due to good states broken, rollback to previous params")
+        # Metropolis-Hastings criterion
+        delta_E = new_obj_value - current_obj_value
+        if delta_E < 0.001 and torch.rand(1).item() > np.exp(delta_E / T):
+            print("Rejected due to M-H criterion violated, rollback to previous params")
             for old_param, param in zip(old_params, net.parameters()):
                 param.data = old_param.data
             rejected = True
-
-        # Metropolis-Hastings criterion
-        if not rejected:
-            delta_E = new_obj_value - current_obj_value
-            if delta_E < 0.001 and torch.rand(1).item() > np.exp(delta_E / T):
-                print("Rejected due to M-H criterion violated, rollback to previous params")
-                for old_param, param in zip(old_params, net.parameters()):
-                    param.data = old_param.data
-                rejected = True
 
         # Not rejected, update params
         if not rejected:
@@ -65,7 +57,7 @@ def safeguarded_simulated_annealing(region_id, net, bad_states, good_states, std
 
 
 # Main ISAR algorithm
-def isar_main(verisig_result_path, sampled_result_path, net_path, output_path, benchmark='uuv'):
+def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, benchmark='uuv'):
 
     # Directory to save all logs and checkpoints
     if not os.path.exists(output_path):
@@ -124,6 +116,7 @@ def isar_main(verisig_result_path, sampled_result_path, net_path, output_path, b
     print(f'Count red regions: {count_red_regions}')
 
     prev_regions = []
+    cases_result = {'NS': 0, 'NF': 0, 'IS': 0, 'IF': 0}
 
     # Simulated annealing main loop
     while len(region_robustness) > 0:
@@ -158,9 +151,10 @@ def isar_main(verisig_result_path, sampled_result_path, net_path, output_path, b
         print(f'Bad states identified: {bad_states}')
 
         # Simulated annealing
-        net_updated = safeguarded_simulated_annealing(bad_region_id, net, bad_states, good_states, benchmark=benchmark)
+        net_updated = simulated_annealing(bad_region_id, net, bad_states, benchmark=benchmark)
 
-        # Check robustness of bad states
+        # Step 1 after sim annealing update: Check if bad region is repaired
+        t1 = time.time()
         h_robustness_bad_prev = []
         h_robustness_bad = []
         repaired_states = []
@@ -183,63 +177,104 @@ def isar_main(verisig_result_path, sampled_result_path, net_path, output_path, b
             h_robustness_bad_prev += [robustness_prev]
 
         print(f'Avg bad states robustness before and after sim annealing: {np.mean(h_robustness_bad_prev)}, {np.mean(h_robustness_bad)}')
+        print(f'Computing bad states robustness takes {time.time() - t1}')
 
-        if len(repaired_states) > 0:
-            print('Exist a bad state that is repaired')
-            good_states += repaired_states  # update good states
+        if len(repaired_states) == 0:
+            print('Case NF: bad region is not repaired, continue to next region')
+            del region_robustness[0]
+            cases_result['NF'] += 1
+            iter_num += 1
+            continue
 
-            # Check robustness of good states
-            h_robustness_good = []
-            for good_state in good_states:
-                if benchmark == 'uuv':
-                    _, traj_y_good = uuv_simulate(net=net_updated, init_global_heading_deg=good_state[0], init_pos_y=good_state[1])
-                    h_robustness_good += [uuv_robustness(traj_y_good)]
-                elif benchmark == 'mc':
-                    traj_pos_good, _ =mc_simulate(net=net_updated, pos_0=good_state[0], vel_0=good_state[1])
-                    h_robustness_good += [mc_robustness(traj_pos_good)]
-                else:
-                    raise NotImplementedError
-
-            avg_good_state_robustness = np.mean(h_robustness_good)
-            print(f'Avg good states robustness after sim annealing: {avg_good_state_robustness}')
-
-            if np.mean(h_robustness_bad_prev) <= np.mean(h_robustness_bad):
-                print('Bad states are improved, proceed')
-
-                # Checkpoint both yaml and torch models
-                repaired_net_path = os.path.join(output_path, f'tanh_iter_{iter_num}_region_{bad_region_id}.pt')
-                torch.save(net_updated, repaired_net_path)
-                net_yml_path = os.path.join(output_path, f'tanh_iter_{iter_num}_region_{bad_region_id}.yml')
-                dump_model_dict(net_yml_path, net_updated)
-
-                # Update model and delete the current region in queue
-                net = net_updated
-                del region_robustness[0]
-
-                # Check the sampled states again and log
-                sampled_checkpoint_path = os.path.join(output_path, f'sample_checkpoint_iter_{iter_num}_region_{bad_region_id}.csv')
-                check_samples(repaired_net_path, sampled_result_path, sampled_checkpoint_path, benchmark=benchmark)
-
-                # Update region colors
-                dict_color = color_regions(verisig_result_path, sampled_checkpoint_path)
-
-                # Update red regions to be repaired
-                df_sample = pd.read_csv(sampled_checkpoint_path)
-                red_mask = df_sample['region'].apply(check_red)
-                df_red = df_sample[red_mask]
-                region_robustness = sort_regions(df_red)
-
+        # Step 2: Check if any good state broken
+        t2 = time.time()
+        h_robustness_good_prev = []
+        h_robustness_good = []
+        for good_state in good_states:
+            if benchmark == 'uuv':
+                _, traj_y_good = uuv_simulate(net=net_updated, init_global_heading_deg=good_state[0], init_pos_y=good_state[1])
+                robustness = uuv_robustness(traj_y_good)
+                _, traj_y_good_prev = uuv_simulate(net=net, init_global_heading_deg=good_state[0], init_pos_y=good_state[1])
+                robustness_prev = uuv_robustness(traj_y_good_prev)
+            elif benchmark == 'mc':
+                traj_pos_good, _ = mc_simulate(net=net_updated, pos_0=good_state[0], vel_0=good_state[1])
+                robustness = mc_robustness(traj_pos_good)
+                traj_pos_good_prev, _ = mc_simulate(net=net, pos_0=good_state[0], vel_0=good_state[1])
+                robustness_prev = mc_robustness(traj_pos_good_prev)
             else:
-                print('Good state broken, exit')
-                break
+                raise NotImplementedError
+            h_robustness_good += [robustness]
+            h_robustness_good_prev += [robustness_prev]
 
-        else:  # region not repaired
-            print('Bad region not repaired, rollback')
+        print(f'Good states robustness before and after sim annealing, mean / min: {np.mean(h_robustness_good_prev)}, {np.min(h_robustness_good)}')
+        print(f'Computing good states robustness takes {time.time() - t2}')
+
+        if np.min(h_robustness_good) >= 0.0:  # No good state broken
+            print('Case NS: No good state is broken, update net and continue to next region')
+            good_states += repaired_states  # update good states, preserve our repaired outcome
+            repaired_net_path = os.path.join(output_path, f'tanh_iter_{iter_num}_region_{bad_region_id}.pt')
+            torch.save(net_updated, repaired_net_path)
+            net_yml_path = os.path.join(output_path, f'tanh_iter_{iter_num}_region_{bad_region_id}.yml')
+            dump_model_dict(net_yml_path, net_updated)
+            net = net_updated
+
+            # Recompute the red regions and sort
+            t3 = time.time()
+            sampled_checkpoint_path = os.path.join(output_path, f'sample_checkpoint_iter_{iter_num}_region_{bad_region_id}.csv')
+            check_samples(repaired_net_path, sampled_result_path, sampled_checkpoint_path)
+            dict_color = color_regions(verisig_result_path, sampled_checkpoint_path)  # recolor regions
+
+            # Update df_sample here
+            df_sample = pd.read_csv(sampled_checkpoint_path)  # Updated robustness of all sampled states
+            red_mask = df_sample['region'].apply(check_red)
+            region_robustness = sort_regions(df_red)  # Update to be repaired regions
+            print(f'New sorted regions: {region_robustness}')
+            print(f'Re-computing to-be-repaired regions takes {time.time() - t3}')
+            cases_result['NS'] += 1
+            iter_num += 1
+            continue
+
+        # Step 3: Bad region repaired, but good state broken, do IBCL interpolation
+        if benchmark == 'uuv':
+            net_mid, success = uuv_ibcl_convex_comb_binary_search(net_lo=net, net_hi=net_updated, bad_states=bad_states, good_states=good_states)
+        elif benchmark == 'mc':
+            net_mid, success = mc_ibcl_convex_comb_binary_search(net_lo=net, net_hi=net_updated, bad_states=bad_states, good_states=good_states)
+        else:
+            raise NotImplementedError
+
+        if success:  # IBCL found an acceptable net
+            print('Case IS: IBCL success')
+            good_states += repaired_states  # update good states
+            repaired_net_path = os.path.join(output_path, f'tanh_iter_{iter_num}_region_{bad_region_id}.pt')
+            torch.save(net_updated, repaired_net_path)
+            net_yml_path = os.path.join(output_path, f'tanh_iter_{iter_num}_region_{bad_region_id}.yml')
+            dump_model_dict(net_yml_path, net_updated)
+            net = net_updated
             del region_robustness[0]
 
-        prev_regions += [bad_region_id]
+            # Recompute the red regions and sort
+            t4 = time.time()
+            sampled_checkpoint_path = os.path.join(output_path, f'sample_checkpoint_iter_{iter_num}_region_{bad_region_id}.csv')
+            check_samples(repaired_net_path, sampled_result_path, sampled_checkpoint_path)
+            dict_color = color_regions(verisig_result_path, sampled_checkpoint_path)  # recolor regions
+
+            # Update df_sample here
+            df_sample = pd.read_csv(sampled_checkpoint_path)  # Updated robustness of all sampled states
+            red_mask = df_sample['region'].apply(check_red)
+            df_red = df_sample[red_mask]
+            region_robustness = sort_regions(df_red)  # Update to be repaired regions
+
+            print(f'New sorted regions: {region_robustness}')
+            print(f'Re-computing to-be-repaired regions takes {time.time() - t4}')
+            cases_result['IS'] += 1
+            iter_num += 1
+            continue
+
+        # IBCL failure
+        print('Case IF: IBCL failure')
+        del region_robustness[0]
+        cases_result['IF'] += 1
         iter_num += 1
-        print(f'Iteration time: {time.time() - iter_start_time}')
 
     print(f'Total time: {time.time() - start_time}')
     return
@@ -254,4 +289,4 @@ if __name__ == '__main__':
     parser.add_argument("--output_path", help="directory for all output files", default='uuv_output')
     args = parser.parse_args()
 
-    isar_main(args.verisig_result_path, args.sampled_result_path, args.network, args.output_path, benchmark=args.benchmark)
+    isari_main(args.verisig_result_path, args.sampled_result_path, args.network, args.output_path, benchmark=args.benchmark)

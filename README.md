@@ -1,28 +1,19 @@
-# Repeatability Package of Incremental Simulated Annealing Repair
-
-### Update 09/12/2024
-We have added the code of baseline methods, and re-structured the code correspondingly.
-
-
-### Update 02/14/2024
-We have fixed the following bugs:
-
-1. Reading and writing to `.csv` files using `pandas` now avoids creating an additional index column, which caused errors before.
+# Repeatability Package of Incremental Simulated Annealing Repair with Interpolation (ISAR-I)
 
 ### Step 0: Start the Docker image
 
-This is the repeatability package for ICCPS 2024 Submission "Repairing Learning-Enabled Controllers While Preserving What Works", and its extension projects.
-Please note: the following instructions are for the Dockerized application. If Docker does not work, please visit our [GitHub page](https://github.com/ericlupy/isar_rep)
+This is the repeatability package for ICCPS 2025 Submission "Accelerating Neural Policy Repair with Preservation via Stability-Plasticity Interpolation", and its extension projects.
+Please note: the following instructions are for the Dockerized application. If Docker does not work, please visit our [GitHub page](https://github.com/ericlupy/isar_interpolation)
 and find the non-Dockerized version under the `no_docker` branch and follow the other instruction to set up the environment manually.
 
-**There is no need to pull any file from this repo.** The Docker image is available on our [Docker Hub repo](https://hub.docker.com/repository/docker/ericlupy/isar_rep).
+**There is no need to pull any file from this repo.** The Docker image is available on our [Docker Hub repo](https://hub.docker.com/repository/docker/ericlupy/isar_interpolation).
 Again, there is no need to pull anything from there either. To run our code, simply install [Docker](https://www.docker.com/) and in your command line terminal, pull our Docker image by
 ```
-docker pull ericlupy/isar_rep:latest
+docker pull ericlupy/isar_interpolation:latest
 ```
 and then run the image in interactive mode by
 ```
-docker run -it ericlupy/isar_rep /bin/bash
+docker run -it ericlupy/isar_interpolation /bin/bash
 ```
 This will start a Docker container that loads our image, and an interactive Linux shell will be available. The shell will be similar to this figure.
 ![Docker interactive shell](figures/docker_shell_example.png)
@@ -69,14 +60,14 @@ Execution time of verifying each region will be recorded at the end of every txt
 
 **Please notice that due to randomness (from random sampling of initial states per region and random perturbation in simulated annealing), the output may not necessarily be the same as in our paper.**
 
-After verification on the broken controller is done, we repair the controller by Incremental Simulated Annealing Repair (ISAR). 
+After verification on the broken controller is done, we repair the controller by Incremental Simulated Annealing Repair with Interpolation (ISAR-I). 
 First, we uniformly sample initial states from each region.
 ```
 python3 sample_states_in_regions.py --benchmark=<uuv|mc> --network=<control network yaml to be repaired> --initial_state_regions_path=<csv file of partitioned regions from previous step> --sampled_result_path=<ampling result csv to be written> --num_samples_per_region=<a positive int, by default 10>
 ```
 This will sample a fixed number of initial states per region and obtain STL robustness of each sampled state. The result will be written in the specified sampled result path as a csv.
 
-Next, with initial states sampled, we run the ISAR algorithm by calling
+Next, with initial states sampled, we run the ISAR-I algorithm by calling
 ```
 python3 incremental_repair.py --benchmark=<uuv|mc> --network=<control network yaml to be repaired> --verisig_result_path=<verisig result csv> --sampled_result_path=<sampling result csv> --output_path=<directory to all output files>
 ```
