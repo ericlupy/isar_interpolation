@@ -284,8 +284,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", help="uuv or mc", default="uuv")
     parser.add_argument("--network", help="network yml file to be repaired", default=os.path.join('controllers', 'uuv_tanh_2_15_2x32_broken.yml'))
-    parser.add_argument("--verisig_result_path", help="path to verisig result csv", default='uuv_verisig_result.csv')
-    parser.add_argument("--sampled_result_path", help="path to sampling result csv", default='uuv_sampling_result.csv')
+    parser.add_argument("--verisig_result_path", help="path to verisig result csv", default=os.path.join('uuv_output', 'uuv_broken_verisig_output.csv'))
+    parser.add_argument("--sampled_result_path", help="path to sampling result csv", default=os.path.join('uuv_output', 'uuv_broken_sampling_output.csv'))
     parser.add_argument("--output_path", help="directory for all output files", default='uuv_output')
     args = parser.parse_args()
 
