@@ -3,8 +3,7 @@
 ### Step 0: Start the Docker image
 
 This is the repeatability package for ICCPS 2025 Submission "Accelerating Neural Policy Repair with Preservation via Stability-Plasticity Interpolation", and its extension projects.
-Please note: the following instructions are for the Dockerized application. If Docker does not work, please visit our [GitHub page](https://github.com/ericlupy/isar_interpolation)
-and find the non-Dockerized version under the `no_docker` branch and follow the other instruction to set up the environment manually.
+Please note: the following instructions are for the Dockerized application.
 
 **There is no need to pull any file from this repo.** The Docker image is available on our [Docker Hub repo](https://hub.docker.com/repository/docker/ericlupy/isar_interpolation).
 Again, there is no need to pull anything from there either. To run our code, simply install [Docker](https://www.docker.com/) and in your command line terminal, pull our Docker image by

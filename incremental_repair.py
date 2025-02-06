@@ -121,8 +121,6 @@ def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, 
     # Simulated annealing main loop
     while len(region_robustness) > 0:
 
-        iter_start_time = time.time()
-
         print(f'Remaining regions to be repaired: {len(region_robustness)}')
 
         bad_region_id = region_robustness[0][0]  # get next region to repair
@@ -271,12 +269,13 @@ def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, 
             continue
 
         # IBCL failure
-        print('Case IF: IBCL failure')
+        print('Case IF: IBCL interpolation failure')
         del region_robustness[0]
         cases_result['IF'] += 1
         iter_num += 1
 
     print(f'Total time: {time.time() - start_time}')
+    print(f'Cases: {cases_result}')
     return
 
 
