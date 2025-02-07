@@ -4,7 +4,7 @@ from ibcl_convex_comb import *
 
 
 # Simulated annealing subroutine
-def simulated_annealing(region_id, net, bad_states, std=0.1, T=0.1, alpha=0.95, num_iter=200, benchmark='uuv'):
+def simulated_annealing(region_id, net, bad_states, std=0.2, T=0.1, alpha=0.95, num_iter=200, benchmark='uuv'):
 
     start_time = time.time()
 
@@ -182,7 +182,7 @@ def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, 
             del region_robustness[0]
             cases_result['NF'] += 1
             iter_num += 1
-            if np.mean(h_robustness_bad) - np.mean(h_robustness_bad_prev) < 0.0:
+            if np.mean(h_robustness_bad) - np.mean(h_robustness_bad_prev) < -0.5:
                 print('Robustness lowered, early stop')
                 break
             else:

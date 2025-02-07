@@ -28,6 +28,7 @@ def uuv_plot_colors(verisig_result_path, dict_color, title='UUV Result', small=F
     ax.set_title(title)
     plt.tight_layout()
     plt.show()
+    plt.savefig(verisig_result_path.replace('.csv', '.png'))
     return
 
 
@@ -55,6 +56,7 @@ def mc_plot_colors(verisig_result_path, dict_color, title='MC Result', small=Fal
     ax.set_title(title)
     plt.tight_layout()
     plt.show()
+    plt.savefig(verisig_result_path.replace('.csv', '.png'))
     return
 
 

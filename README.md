@@ -132,7 +132,8 @@ It will end up with a plot like the follows.
 
 Configurations of this plot, such as title, ticks and size can be modified in `visualization.py`.
 This code will also output the number of the three types of regions,
-and the mean and std of min STL robustness in red, non-red and overall regions (as in our Table 1 and 3).
+and the mean and std of min STL robustness in red, non-red and overall regions (as in our Table 1 and 3). 
+The figure will be saved as a png file, with the same name as `$PATH_TO_VERISIG_PARSED_CSV` but with suffix `.png`.
 
 ### Baseline Methods
 We have implemented command line interfaces to run the baseline methods for both UUV and MC. Here, we use UUV as an example. 
