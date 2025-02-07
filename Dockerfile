@@ -7,6 +7,7 @@ WORKDIR /app
 COPY . /app
 
 # Setup Python packages
+RUN apt update && apt install -y python3.8 python3.8-dev
 RUN apt install -y python3-pip
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -15,7 +16,6 @@ RUN sed -i -e 's/\r$//' *.sh
 RUN chmod +x *.sh
 
 # Setup Verisig packages
-RUN apt update && apt install -y python3.8 python3.8-dev
 RUN apt install -y build-essential
 RUN apt install -y openjdk-8-jdk
 RUN apt install -y libyaml-cpp-dev
