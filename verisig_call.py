@@ -89,6 +89,10 @@ if __name__ == '__main__':
             with open(f'uuv_{controller_name}_execution_log.txt', 'a') as log_file:
                 for y_lo, h_lo, execution_time in results:
                     log_file.write(f"{y_lo},{h_lo},{execution_time:.3f}\n")
+            pool.close()
+            pool.join()
+
+        print("Paralell verification finished")
 
     elif args.benchmark == 'mc':
 
@@ -107,6 +111,9 @@ if __name__ == '__main__':
             with open(f'mc_{controller_name}_execution_log.txt', 'a') as log_file:
                 for pos_lo, vel_lo, execution_time in results:
                     log_file.write(f"{pos_lo},{vel_lo},{execution_time:.3f}\n")
+            pool.close()
+            pool.join()
+
         print("Paralell verification finished")
 
     else:

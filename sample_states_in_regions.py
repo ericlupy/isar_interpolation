@@ -36,7 +36,7 @@ def initial_sample(initial_state_regions_path, net_path, sampled_result_path, nu
                 result_dict[f'y'] = y
                 result_dict[f'h'] = h
                 result_dict[f'result'] = robustness
-                df_sample = df_sample.append(result_dict, ignore_index=True)
+                df_sample = pd.concat([df_sample, pd.DataFrame([result_dict])], ignore_index=True)
 
     elif benchmark == 'mc':
         df_sample = pd.DataFrame(columns=['region', 'pos', 'vel', 'result'])
@@ -56,7 +56,7 @@ def initial_sample(initial_state_regions_path, net_path, sampled_result_path, nu
                 result_dict[f'pos'] = pos
                 result_dict[f'vel'] = vel
                 result_dict[f'result'] = robustness
-                df_sample = df_sample.append(result_dict, ignore_index=True)
+                df_sample = pd.concat([df_sample, pd.DataFrame([result_dict])], ignore_index=True)
 
     else:
         raise NotImplementedError

@@ -309,7 +309,7 @@ def check_samples(repaired_net_path, sampled_result_path, sample_repaired_result
             result_dict['y'] = y
             result_dict['h'] = h
             result_dict['result'] = robustness
-            df_sample_repaired = df_sample_repaired.append(result_dict, ignore_index=True)
+            df_sample_repaired = pd.concat([df_sample_repaired, pd.DataFrame([result_dict])], ignore_index=True)
     elif benchmark == 'mc':
         df_sample_repaired = pd.DataFrame(columns=['region', 'pos', 'vel', 'result'])
         for idx, row in df_sample.iterrows():
@@ -321,7 +321,7 @@ def check_samples(repaired_net_path, sampled_result_path, sample_repaired_result
             result_dict[f'pos'] = pos
             result_dict[f'vel'] = vel
             result_dict[f'result'] = robustness
-            df_sample_repaired = df_sample_repaired.append(result_dict, ignore_index=True)
+            df_sample_repaired = pd.concat([df_sample_repaired, pd.DataFrame([result_dict])], ignore_index=True)
     else:
         raise NotImplementedError
 
