@@ -3,9 +3,18 @@ FROM ubuntu:20.04
 # Ban interactive shell during installation
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install required packages
 WORKDIR /app
 COPY . /app
+
+# Setup Python packages
+RUN apt install -y python3-pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Setup executable scripts
+RUN sed -i -e 's/\r$//' *.sh
+RUN chmod +x *.sh
+
+# Setup Verisig packages
 RUN apt update && apt install -y python3.8 python3.8-dev
 RUN apt install -y build-essential
 RUN apt install -y openjdk-8-jdk
@@ -24,14 +33,6 @@ RUN make
 WORKDIR ../verisig-src
 RUN ./gradlew installDist
 WORKDIR /app
-
-# Setup Python packages
-RUN apt install -y python3-pip
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Setup executable scripts
-RUN sed -i -e 's/\r$//' *.sh
-RUN chmod +x *.sh
 
 # Wait for manual execution of scripts
 CMD ["tail", "-f", "/dev/null"]
