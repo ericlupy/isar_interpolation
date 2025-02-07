@@ -178,11 +178,15 @@ def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, 
         print(f'Computing bad states robustness takes {time.time() - t1}')
 
         if len(repaired_states) == 0:
-            print('Case NF: bad region is not repaired, continue to next region')
+            print('Case NF: bad region is not repaired')
             del region_robustness[0]
             cases_result['NF'] += 1
             iter_num += 1
-            continue
+            if np.mean(h_robustness_bad) - np.mean(h_robustness_bad_prev) < 0.0:
+                print('Robustness lowered, early stop')
+                break
+            else:
+                continue
 
         # Step 2: Check if any good state broken
         t2 = time.time()
