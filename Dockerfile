@@ -29,6 +29,9 @@ WORKDIR /app
 RUN apt install -y python3-pip
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Setup executable scripts
+RUN chmod +x *.sh
+
 # Wait for manual execution of scripts
 CMD ["tail", "-f", "/dev/null"]
 
