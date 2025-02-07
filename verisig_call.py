@@ -49,7 +49,7 @@ if __name__ == '__main__':
         raise FileNotFoundError
 
     if not os.path.exists(args.verisig_path):
-        os.mkdir(args.verisig_path)
+        raise FileNotFoundError
 
     if not os.path.exists(args.verisig_output_path):
         os.mkdir(args.verisig_output_path)

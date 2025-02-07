@@ -165,7 +165,7 @@ print(f'Training time = {time.time() - start_time}')
 
 
 # Save the whole thing first
-model.save(os.path.join(working_dir, 'agent_new.zip'))
+model.save(os.path.join(working_dir, 'agent.zip'))
 print('Whole RL agent saved')
 
 # Save retrained model
@@ -175,9 +175,9 @@ elif args.algo == 'sac':
     net_aug_repaired = model.policy.latent_pi
 else:
     raise NotImplementedError
-save_path_aug = os.path.join(working_dir, 'repaired_net_aug_new.pth')
+save_path_aug = os.path.join(working_dir, 'repaired_net_aug.pth')
 torch.save(net_aug_repaired, save_path_aug)
-save_path_yml_aug = os.path.join(working_dir, 'repaired_net_aug_new.yml')
+save_path_yml_aug = os.path.join(working_dir, 'repaired_net_aug.yml')
 dump_model_dict(save_path_yml_aug, net_aug_repaired)
 print('FMDP model saved')
 
@@ -194,9 +194,9 @@ net_repaired_dict['fc3.weight'] = net_aug_repaired_dict['fc3.weight']
 net_repaired_dict['fc3.bias'] = net_aug_repaired_dict['fc3.bias']
 net_repaired.load_state_dict(net_repaired_dict)
 
-save_path = os.path.join(working_dir, 'repaired_net_new.pth')
+save_path = os.path.join(working_dir, 'repaired_net.pth')
 torch.save(net_repaired, save_path)
-save_path_yml = os.path.join(working_dir, 'repaired_net_new.yml')
+save_path_yml = os.path.join(working_dir, 'repaired_net.yml')
 dump_model_dict(save_path_yml, net_repaired)
 
 

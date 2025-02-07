@@ -118,7 +118,7 @@ if __name__ == '__main__':
             if len(dict_result.keys()) == 0:
                 continue
             dict_row = {'y_lo': region[0], 'y_hi': region[1], 'h_lo': region[2], 'h_hi': region[3], 'result': dict_result['result']}
-            df_result = df_result.append(dict_row, ignore_index=True)
+            df_result = pd.concat([df_result, pd.DataFrame([dict_row])], ignore_index=True)
         df_result.to_csv('uuv_verisig_result.csv', index=False)
 
     elif args.benchmark == 'mc':
@@ -129,7 +129,7 @@ if __name__ == '__main__':
             if len(dict_result.keys()) == 0:
                 continue
             dict_row = {'pos_lo': region[0], 'pos_hi': region[1], 'vel_lo': region[2], 'vel_hi': region[3], 'result': dict_result['result']}
-            df_result = df_result.append(dict_row, ignore_index=True)
+            df_result = pd.concat([df_result, pd.DataFrame([dict_row])], ignore_index=True)
         df_result.to_csv('mc_verisig_result.csv', index=False)
 
     else:

@@ -140,7 +140,7 @@ print(f'Training time = {time.time() - start_time}')
 
 
 # Save the whole thing first
-model.save(os.path.join(working_dir, 'agent_new.zip'))
+model.save(os.path.join(working_dir, 'agent.zip'))
 print('Whole RL agent saved')
 
 # Save retrained model
@@ -150,9 +150,9 @@ elif args.algo == 'sac':
     repaired_net = model.policy.latent_pi
 else:
     raise NotImplementedError
-save_path = os.path.join(working_dir, 'repaired_net_new.pth')
+save_path = os.path.join(working_dir, 'repaired_net.pth')
 torch.save(repaired_net, save_path)
-save_path_yml = os.path.join(working_dir, 'repaired_net_new.yml')
+save_path_yml = os.path.join(working_dir, 'repaired_net.yml')
 dump_model_dict(save_path_yml, repaired_net)
 
 print('STLGym model saved')
