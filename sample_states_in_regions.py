@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument("--network", help="network yml file to be repaired", default=os.path.join('controllers', 'uuv_tanh_2_15_2x32_broken.yml'))
     parser.add_argument("--initial_state_regions_path", help="path to initial state regions csv", default='uuv_initial_state_regions.csv')
     parser.add_argument("--sampled_result_path", help="path to sampling result csv", default='uuv_sampling_result.csv')
-    parser.add_argument("--num_samples_per_region", type=int, help="number of sampled states in a region", default=10)
+    parser.add_argument("--num_samples_per_region", help="number of sampled states in a region", default=10)
     args = parser.parse_args()
 
     initial_sample(initial_state_regions_path=args.initial_state_regions_path, net_path=args.network,

@@ -60,13 +60,25 @@ def mc_partition(small=False):
     return test_set
 
 
+def str2bool(value):
+    """Convert a string to a boolean."""
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ('true', 'yes', '1'):
+        return True
+    elif value.lower() in ('false', 'no', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", help="uuv or mc", default='uuv')
-    parser.add_argument("--small", type=bool, help="true or false", action='store_false')
+    parser.add_argument("--small", help="true or false", default="false")
     args = parser.parse_args()
 
-    if not bool(args.small):
+    if not str2bool(args.small):
         if args.benchmark == 'uuv':
             test_set = uuv_partition()
             df_test_set = pd.DataFrame(test_set, columns=['y_lo', 'y_hi', 'h_lo', 'h_hi'])

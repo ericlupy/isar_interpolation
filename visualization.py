@@ -85,12 +85,24 @@ def check_min_robustness(sampled_result_path, dict_color):
     return
 
 
+def str2bool(value):
+    """Convert a string to a boolean."""
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ('true', 'yes', '1'):
+        return True
+    elif value.lower() in ('false', 'no', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", help="uuv or mc", default="uuv")
     parser.add_argument("--verisig_result_path", help="path to verisig result csv", default='uuv_verisig_result.csv')
     parser.add_argument("--sampled_result_path", help="path to sampling result csv", default='uuv_sampling_result.csv')
-    parser.add_argument("--small", type=bool, help="if small for smoke test", action='store_false')
+    parser.add_argument("--small", help="if small for smoke test", default="false")
     args = parser.parse_args()
 
     dict_color = color_regions(args.verisig_result_path, args.sampled_result_path)
@@ -98,8 +110,8 @@ if __name__ == '__main__':
     check_min_robustness(args.sampled_result_path, dict_color)
 
     if args.benchmark == 'uuv':
-        uuv_plot_colors(args.verisig_result_path, dict_color, small=bool(args.small))
+        uuv_plot_colors(args.verisig_result_path, dict_color, small=str2bool(args.small))
     elif args.benchmark == 'mc':
-        mc_plot_colors(args.verisig_result_path, dict_color, small=bool(args.small))
+        mc_plot_colors(args.verisig_result_path, dict_color, small=str2bool(args.small))
     else:
         raise NotImplementedError
