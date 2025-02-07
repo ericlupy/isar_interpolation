@@ -24,12 +24,16 @@ please follow the instructions below.
 First, we partition the initial state regions by calling
 
 ```
-python3 generate_partition.py --benchmark=$BENCHMARK$
+python3 generate_partition.py --benchmark=$BENCHMARK$  --small=$IF_SMALL$
 ```
 
 Here, `$BENCHMARK$` can be `uuv` or `mc`. This will generate a partition of initial state space for UUV or MC. The partition is saved as a csv file, with each rectangular
 region's lower bound and higher bound of every dimension. The generated file will be a csv file named `uuv_initial_state_regions.csv` or `mc_initial_state_regions.csv`.
 
+> #### Smoke Test Notice
+> For smoke test, we have alternative simple partitions: 6 regions for UUV and 4 for MC (instead of 2000 and 900). This can be enabled by setting `$IF_SMALL$` to `True` (by default it is `False`).
+> The reason for this option is because running our experiment usually takes days, and this allows fast smoke test of each step.
+> The output files will be `uuv_initial_state_regions_small.csv` or `mc_initial_state_regions_small.csv`, and the remaining steps stay the same, except for visualization in step 5, where `$IF_SMALL$` is also an input.
 
 ### Step 2: Verify controller networks on initial state regions
 
@@ -91,7 +95,7 @@ This is the main repair algorithm. At every iteration, the network will be check
 The new STL robustness on all sampled states will also be checkpointed as csv files.
 Please expect that this will take a long time, around 1-2 days. Notice that the system dynamics informaion is encoded in `uuv_model_oneHz.mat`.
 Since the repaired network and the new STL robustness will be checkpointed after every iteration, we can always early stop and use one of the checkpoints as the output.
-Execution time of repairing each region will be displayed in the standard output.
+Execution time and the number of 4 cases will be displayed in the standard output.
 
 
 ### Step 4: Verify the repaired controller
@@ -103,7 +107,7 @@ Notice that we don't necessarily need to use the very last repaired network - an
 Once we have a verification result and a sampled result (both as csv files) for a controller network, we can visualize the outcome as in our paper.
 By calling
 ```
-python visualization.py --benchmark=$BENCHMARK$ --verisig_result_path=$PATH_TO_VERISIG_RESULT_CSV$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$ 
+python visualization.py --benchmark=$BENCHMARK$ --verisig_result_path=$PATH_TO_VERISIG_RESULT_CSV$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$ --small=$IF_SMALL$
 ```
 It will end up with a plot like the follows.
 
