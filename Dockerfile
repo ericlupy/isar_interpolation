@@ -30,6 +30,7 @@ RUN apt install -y python3-pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Setup executable scripts
+RUN sed -i -e 's/\r$//' *.sh
 RUN chmod +x *.sh
 
 # Wait for manual execution of scripts
