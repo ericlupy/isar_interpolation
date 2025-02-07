@@ -63,7 +63,7 @@ def mc_partition(small=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", help="uuv or mc", default='uuv')
-    parser.add_argument("--small", help="True or False", default=False)
+    parser.add_argument("--small", type=bool, help="true or false", action='store_false')
     args = parser.parse_args()
 
     if not bool(args.small):

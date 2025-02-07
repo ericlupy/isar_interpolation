@@ -40,7 +40,7 @@ if __name__ == '__main__':
     parser.add_argument("--network", help="network yml file to be verified", default=os.path.join('controllers', 'uuv_tanh_2_15_2x32_broken.yml'))
     parser.add_argument("--verisig_path", help="path to verisig directory", default='verisig')
     parser.add_argument("--verisig_output_path", help="path to output txt files of verisig", default=os.path.join('verisig', 'uuv_output'))
-    parser.add_argument("--cpu_ratio", help="percentage of cpus in parallel verification, a value between 0 and 1", default=0.5)
+    parser.add_argument("--cpu_ratio", type=float, help="percentage of cpus in parallel verification, a value between 0 and 1", default=0.5)
     parser.add_argument("--initial_state_regions_path", help="initial state regions csv from previous step", default="uuv_initial_state_regions.csv")
     args = parser.parse_args()
 
@@ -107,6 +107,7 @@ if __name__ == '__main__':
             with open(f'mc_{controller_name}_execution_log.txt', 'a') as log_file:
                 for pos_lo, vel_lo, execution_time in results:
                     log_file.write(f"{pos_lo},{vel_lo},{execution_time:.3f}\n")
+        print("Paralell verification finished")
 
     else:
         raise NotImplementedError

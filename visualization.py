@@ -90,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument("--benchmark", help="uuv or mc", default="uuv")
     parser.add_argument("--verisig_result_path", help="path to verisig result csv", default='uuv_verisig_result.csv')
     parser.add_argument("--sampled_result_path", help="path to sampling result csv", default='uuv_sampling_result.csv')
-    parser.add_argument("--small", help="if small for smoke test", default=False)
+    parser.add_argument("--small", type=bool, help="if small for smoke test", action='store_false')
     args = parser.parse_args()
 
     dict_color = color_regions(args.verisig_result_path, args.sampled_result_path)

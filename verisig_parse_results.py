@@ -99,6 +99,7 @@ if __name__ == '__main__':
     parser.add_argument("--benchmark", help="uuv or mc", default="uuv")
     parser.add_argument("--network", help="network yml file to be verified", default=os.path.join('controllers', 'uuv_tanh_2_15_2x32_broken.yml'))
     parser.add_argument("--verisig_output_path", help="path to output txt files of verisig", default=os.path.join('verisig', 'uuv_output'))
+    parser.add_argument("--verisig_parsed_csv", help="path to final csv", default='uuv_verisig_result.csv')
     parser.add_argument("--initial_state_regions_csv", help="initial state regions csv from previous step", default="uuv_initial_state_regions.csv")
     args = parser.parse_args()
 
@@ -119,7 +120,7 @@ if __name__ == '__main__':
                 continue
             dict_row = {'y_lo': region[0], 'y_hi': region[1], 'h_lo': region[2], 'h_hi': region[3], 'result': dict_result['result']}
             df_result = pd.concat([df_result, pd.DataFrame([dict_row])], ignore_index=True)
-        df_result.to_csv('uuv_verisig_result.csv', index=False)
+        df_result.to_csv(args.verisig_parsed_csv, index=False)
 
     elif args.benchmark == 'mc':
         df_result = pd.DataFrame(columns=['pos_lo', 'pos_hi', 'vel_lo', 'vel_hi', 'result'])
@@ -130,7 +131,7 @@ if __name__ == '__main__':
                 continue
             dict_row = {'pos_lo': region[0], 'pos_hi': region[1], 'vel_lo': region[2], 'vel_hi': region[3], 'result': dict_result['result']}
             df_result = pd.concat([df_result, pd.DataFrame([dict_row])], ignore_index=True)
-        df_result.to_csv('mc_verisig_result.csv', index=False)
+        df_result.to_csv(args.verisig_parsed_csv, index=False)
 
     else:
         raise NotImplementedError

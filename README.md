@@ -19,23 +19,41 @@ This will start a Docker container that loads our image, and an interactive Linu
 This Docker image includes `Ubuntu 20.0.4`, `Python 3.8`, Verisig, and the required packages. After entering the interactive shell,
 please follow the instructions below.
 
+> #### Smoke Test Notice
+> For smoke test, we have alternative simple partitions: 6 regions for UUV and 4 for MC (instead of 2000 and 900). This can be enabled by setting `$IF_SMALL` to `True` in command line arguments (by default it is `False`).
+> The reason for this option is because running our experiment usually takes days, and this allows fast smoke test of each step.
+
+> #### Bash scripts
+> We provide end-to-end bash scripts. Each run is broken down into 3 scripts.
+> - Script 1: Run from beginning until repair is finished (step 1-3 below).
+> - Script 2: Only calling Verisig and check the sampled initial states. This is needed for step 4 below.
+> - Script 3: Visualization of results. This is needed for step 5 below.
+
+For example, to run a small smoke test trial for MC, call
+```
+./run_small_mc.sh
+```
+Then, after a repaired network is generated, replace its path in `run_small_mc_verisig.sh` as requested by the comments, and run
+```
+./run_small_mc_verisig.sh
+```
+Finally, replace the output file variables and run the visualization script.
+```
+./run_small_mc_visualization.sh
+```
+
 ### Step 1: Generate initial state space partitions
 
 First, we partition the initial state regions by calling
 
 ```
-python3 generate_partition.py --benchmark=$BENCHMARK$  --small=$IF_SMALL$
+python3 generate_partition.py --benchmark="$BENCHMARK"  --small="$IF_SMALL"
 ```
 
-Here, `$BENCHMARK$` can be `uuv` or `mc`. This will generate a partition of initial state space for UUV or MC. The partition is saved as a csv file, with each rectangular
+Here, `$BENCHMARK` can be `uuv` or `mc`. This will generate a partition of initial state space for UUV or MC. The partition is saved as a csv file, with each rectangular
 region's lower bound and higher bound of every dimension. The generated file will be a csv file named `uuv_initial_state_regions.csv` or `mc_initial_state_regions.csv`.
 
-> #### Smoke Test Notice
-> For smoke test, we have alternative simple partitions: 6 regions for UUV and 4 for MC (instead of 2000 and 900). This can be enabled by setting `$IF_SMALL$` to `True` (by default it is `False`).
-> The reason for this option is because running our experiment usually takes days, and this allows fast smoke test of each step.
-> The output files will be `uuv_initial_state_regions_small.csv` or `mc_initial_state_regions_small.csv`, and the remaining steps stay the same, except for visualization in step 5, where `$IF_SMALL$` is also an input.
-
-### Step 2: Verify controller networks on initial state regions
+### Step 2: Call Verisig to verify the to-be-repaired network
 
 Next, we call Verisig to verify the controller network on each of the partitioned regions. Verification on each region will be run in parallel.
 Please notice that we have prepared a `.cfg` and `.xml` file for both UUV and MC. These files encode the system dynamics.
@@ -46,50 +64,49 @@ The initial to-be-repaired controller networks are in `/controllers`. Verisig re
 With Verisig installed and all files prepared, we call the following code for parallel verification on initial state regions.
 
 ```
-python3 verisig_call.py --benchmark=$BENCHMARK$ --network=$PATH_TO_CONTROL_NETWORK_YML$ --verisig_path=$PATH_TO_VERISIG$ --verisig_output_path=$PATH_TO_VERISIG_OUTPUT$ --cpu_ratio=$RATIO$ --initial_state_regions_path=$PATH_TO_PARTITION_CSV$
+python3 verisig_call.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --verisig_path="$PATH_TO_VERISIG" --verisig_output_path="$PATH_TO_VERISIG_OUTPUT" --cpu_ratio="$RATIO" --initial_state_regions_path="$PATH_TO_PARTITION_CSV"
 ```
 Here, we have
 
-- `$PATH_TO_CONTROL_NETWORK_YML$`: the path to the controller network yml, e.g. `controllers/uuv_tanh_2_15_2x32_broken.yml`.
-- `$PATH_TO_VERISIG$`: the root path of Verisig. By default, Docker will install it at `verisig`.
-- `$PATH_TO_VERISIG_OUTPUT$`: the path to a directory, where Verisig will save its temporary txt outputs, each txt corresponding to the log of verifying one region, e.g. `verisig/my_uuv_outputs`.
-- `$RATIO$`: the ratio of CPU being used, a floating point between 0 and 1.
-- `$PATH_TO_PARTITION_CSV$`: the path to the partition csv file generated in the previous step.
+- `$PATH_TO_CONTROL_NETWORK_YML`: the path to the controller network yml, e.g. `controllers/uuv_tanh_2_15_2x32_broken.yml`.
+- `$PATH_TO_VERISIG`: the root path of Verisig. By default, Docker will install it at `verisig`.
+- `$PATH_TO_VERISIG_OUTPUT`: the path to a directory, where Verisig will save its temporary txt outputs, each txt corresponding to the log of verifying one region, e.g. `verisig/my_uuv_outputs`.
+- `$RATIO`: the ratio of CPU being used, a floating point between 0 and 1.
+- `$PATH_TO_PARTITION_CSV`: the path to the partition csv file generated in the previous step.
 
 Warning: Running Verisig parallel verification may take a very long time (please expect more than 12 hours), depending on CPU utilization. The logs generated will take some storage (please expect over 1GB).
 
 After all regions are verified, we can parse the results by calling
 ```
-python3 verisig_parse_results.py --benchmark=$BENCHMARK$ --network=$PATH_TO_CONTROL_NETWORK_YML$ --verisig_output_path=$PATH_TO_VERISIG_OUTPUT$ --initial_state_regions_csv=$PATH_TO_PARTITION_CSV$
+python3 verisig_parse_results.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --verisig_output_path="$PATH_TO_VERISIG_OUTPUT" --verisig_parsed_csv="$PATH_TO_VERISIG_PARSED_CSV" --initial_state_regions_csv="$PATH_TO_PARTITION_CSV"
 ```
 The verification of each region will be run in a subprocess, output to a txt log file.
-The verification results of all initial state regions will be parsed from Verisig logs and written to another csv file named `uuv_verisig_result.csv` or `mc_verisig_result.csv`.
+The verification results of all initial state regions will be parsed from Verisig logs and written to another csv file named `$PATH_TO_VERISIG_PARSED_CSV`.
 Execution time of verifying each region will be recorded at the end of every txt log file.
 
-### Step 3: Repair controller networks
-
 **Please notice that due to randomness (from random sampling of initial states per region and random perturbation in simulated annealing), the output may not necessarily be the same as in our paper.**
+
+### Step 3: Incremental repair
 
 After verification on the to-be-repaired controller is done, we repair the controller by Incremental Simulated Annealing Repair with Interpolation (ISAR-I). 
 First, we uniformly sample initial states from each region.
 ```
-python3 sample_states_in_regions.py --benchmark=$BENCHMARK$ --network=$PATH_TO_CONTROL_NETWORK_YML$ --initial_state_regions_path=$PATH_TO_PARTITION_CSV$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$ --num_samples_per_region=$N_SAMPLES$
+python3 sample_states_in_regions.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --initial_state_regions_path="$PATH_TO_PARTITION_CSV" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV" --num_samples_per_region="$N_SAMPLES"
 ```
 Here, we have
 
-- `$PATH_TO_SAMPLE_RESULT_CSV$`: the path to a new csv file, where simulated results on the sampled initial states will be saved.
-- `$N_SAMPLES$`: the number of samples per region, by default 10.
+- `$PATH_TO_SAMPLE_RESULT_CSV`: the path to a new csv file, where simulated results on the sampled initial states will be saved.
+- `$N_SAMPLES`: the number of samples per region, by default 10.
 
 This will sample a fixed number of initial states per region and obtain STL robustness of each sampled state. The result will be written in the specified sampled result path as a csv.
 
 Next, with initial states sampled, we run the ISAR-I algorithm by calling
 ```
-python3 incremental_repair.py --benchmark=$BENCHMARK$ --network=$PATH_TO_CONTROL_NETWORK_YML$ --verisig_result_path=$PATH_TO_VERISIG_RESULT_CSV$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$ --output_path=$PATH_TO_OUTPUT$
+python3 incremental_repair.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --verisig_result_path="$PATH_TO_VERISIG_PARSED_CSV" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV" --output_path="$PATH_TO_OUTPUT"
 ```
 Here, we have
 
-- `$PATH_TO_VERISIG_RESULT_CSV$`: the path to the final Verisig output csv file generated by step 2.
-- `$PATH_TO_OUTPUT$`: a directory, where final output files, such as repaired network yml files, will be saved, e.g. `my_uuv_final_output_dir`.
+- `$PATH_TO_OUTPUT`: a directory, where final output files, such as repaired network yml files, will be saved, e.g. `my_uuv_final_output_dir`.
 
 This is the main repair algorithm. At every iteration, the network will be checkpointed as both yaml and PyTorch files if the selected region is repaired and no good sampled states are broken.
 The new STL robustness on all sampled states will also be checkpointed as csv files.
@@ -98,16 +115,16 @@ Since the repaired network and the new STL robustness will be checkpointed after
 Execution time and the number of 4 cases will be displayed in the standard output.
 
 
-### Step 4: Verify the repaired controller
+### Step 4: Verify the repaired network
 The repaired network can be verified again using Verisig. It is the same operation as step 2, except that the input network yaml file into `verisig_call.py` is replaced by the repaired file.
 Notice that we don't necessarily need to use the very last repaired network - any checkpointed network during the repair procedure can also be verified again and see the outcome.
 
 
-### Step 5: Visualize results
+### Step 5: Visualization
 Once we have a verification result and a sampled result (both as csv files) for a controller network, we can visualize the outcome as in our paper.
 By calling
 ```
-python visualization.py --benchmark=$BENCHMARK$ --verisig_result_path=$PATH_TO_VERISIG_RESULT_CSV$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$ --small=$IF_SMALL$
+python3 visualization.py --benchmark="$BENCHMARK" --verisig_result_path="$PATH_TO_VERISIG_PARSED_CSV" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV" --small="$IF_SMALL"
 ```
 It will end up with a plot like the follows.
 
@@ -123,33 +140,33 @@ Notice that these baseline methods need the information of bad initial states in
 
 - STLGym
 ```
-python uuv_baselines/uuv_stlgym.py --algo=$RL_ALGO$ --steps=$MAX_STEPS$ --network=$PATH_TO_CONTROL_NETWORK_YML$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$
+python3 uuv_baselines/uuv_stlgym.py --algo="$RL_ALGO" --steps="$MAX_STEPS" --network="$PATH_TO_CONTROL_NETWORK_YML" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV"
 ```
-where `$RL_ALGO$` can be one of `ppo`, `a2c` and `sac`, and `$MAX_STEPS$` is the number of max training steps, by default 10^5. 
+where `$RL_ALGO` can be one of `ppo`, `a2c` and `sac`, and `$MAX_STEPS` is the number of max training steps, by default 10^5. 
 The repaired network will be saved as both yml and pth as `uuv_baselines_stlgym_$RL_ALGO$/repaired_net.yml` and `uuv_baselines_stlgym_$RL_ALGO$/repaired_net.pth`.
 The yml file can then be evaluated in the same way.
 
 - F-MDP
 ```
-python uuv_baselines/uuv_fmdp.py --algo=$RL_ALGO$ --steps=$MAX_STEPS$ --network=$PATH_TO_CONTROL_NETWORK_YML$ --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$
+python3 uuv_baselines/uuv_fmdp.py --algo="$RL_ALGO" --steps="$MAX_STEPS" --network="$PATH_TO_CONTROL_NETWORK_YML" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV"
 ```
 The arguments and outputs of F-MDP are similar to STLGym.
 
 - Tube MPC Shielding
 ```
-python uuv_baselines/uuv_mpc_shield.py --sampled_result_path=$PATH_TO_SAMPLE_RESULT_CSV$
+python3 uuv_baselines/uuv_mpc_shield.py --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV"
 ```
 Notice that MPC shielding does not actually modify the network, so no network will be generated. Instead, the outcome of shielding will be output in stdout.
 It will generate labeled data for trianing the imitation methods below, as a pkl file, e.g., `dict_mpc_data_ipopt_uuv.pkl`.
 
 - MIQP imitation
 ```
-python uuv_baselines/uuv_imitation.py --data_path=$PATH_TO_MPC_PKL$ --network=$PATH_TO_CONTROL_NETWORK_YML$  --epochs=$MAX_STEPS$ --if_miqp=True
+python3 uuv_baselines/uuv_imitation.py --data_path="$PATH_TO_MPC_PKL" --network="$PATH_TO_CONTROL_NETWORK_YML"  --epochs="$MAX_STEPS" --if_miqp=True
 ```
 This will call MIQP imitation on the labeled data generated by MPC shielding, input as `$PATH_TO_MPC_PKL$`. It outputs the repaired network in the same way as STLGym and F-MDP.
 
 - Minimally deviating repair imitation
 ```
-python uuv_baselines/uuv_imitation.py --data_path=$PATH_TO_MPC_PKL$ --network=$PATH_TO_CONTROL_NETWORK_YML$  --epochs=$MAX_STEPS$ --if_miqp=False
+python3 uuv_baselines/uuv_imitation.py --data_path="$PATH_TO_MPC_PKL" --network="$PATH_TO_CONTROL_NETWORK_YML"  --epochs="$MAX_STEPS" --if_miqp=False
 ```
 This will call minimally deviating repair imitation, with output the same format as MIQP imitation.
