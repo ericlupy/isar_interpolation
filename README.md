@@ -25,22 +25,16 @@ please follow the instructions below.
 
 > #### Bash scripts
 > We provide end-to-end bash scripts. Each run is broken down into 3 scripts.
-> - Script 1: Run from beginning until repair is finished (step 1-3 below).
-> - Script 2: Only calling Verisig and check the sampled initial states. This is needed for step 4 below.
-> - Script 3: Visualization of results. This is needed for step 5 below.
+> - Script 1: An end-to-end run from step 1 to 5.
+> - Script 2: Only calling Verisig and check the sampled initial states. This is for verification and sampling on flexible networks.
+> - Script 3: Visualization of results. This is for visualization of flexible networks.
 
 For example, to run a small smoke test trial for MC, call
 ```
 ./run_small_mc.sh
 ```
-Then, after a repaired network is generated, replace its path in `run_small_mc_verisig.sh` as requested by the comments, and run
-```
-./run_small_mc_verisig.sh
-```
-Finally, replace the output file variables and run the visualization script.
-```
-./run_small_mc_visualization.sh
-```
+If verification and sampling, or visualization of flexible networks are needed, call `./run_small_mc_verisig.sh` to generate sampling and verification results,
+and call `./run_small_mc_visualize.sh` to visualize. Please follow the comments in these two files to modify the variable names before running them.
 
 ### Step 1: Generate initial state space partitions
 

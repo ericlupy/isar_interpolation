@@ -2,7 +2,7 @@
 
 # Assign values to variables
 BENCHMARK="mc"
-PATH_TO_CONTROL_NETWORK_YML="mc_output/repaired_network_small.yml" # replace it with the network to be verified, e.g. the repaired network
+PATH_TO_CONTROL_NETWORK_YML="mc_repaired_network_small.yml" # replace it with the network to be verified, e.g. the repaired network
 PATH_TO_PARTITION_CSV="mc_initial_state_regions_small.csv"
 PATH_TO_SAMPLE_RESULT_CSV="mc_sampling_repaired_result_small.csv" # replace it with the name of sample result file you want
 N_SAMPLES=10

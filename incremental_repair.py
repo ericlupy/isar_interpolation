@@ -57,7 +57,7 @@ def simulated_annealing(region_id, net, bad_states, std=0.2, T=0.1, alpha=0.95, 
 
 
 # Main ISAR algorithm
-def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, benchmark='uuv'):
+def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, benchmark='uuv', small=False):
 
     # Directory to save all logs and checkpoints
     if not os.path.exists(output_path):
@@ -280,16 +280,35 @@ def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, 
 
     print(f'Total time: {time.time() - start_time}')
     print(f'Cases: {cases_result}')
+
+    if not small:
+        final_net_yml_path = os.path.join(output_path, f'{benchmark}_repaired_network.yml')
+    else:
+        final_net_yml_path = os.path.join(output_path, f'{benchmark}_repaired_network_small.yml')
+    dump_model_dict(final_net_yml_path, net)
     return
+
+
+def str2bool(value):
+    """Convert a string to a boolean."""
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ('true', 'yes', '1'):
+        return True
+    elif value.lower() in ('false', 'no', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", help="uuv or mc", default="uuv")
+    parser.add_argument("--small", help="true or false", default="false")
     parser.add_argument("--network", help="network yml file to be repaired", default=os.path.join('controllers', 'uuv_tanh_2_15_2x32_broken.yml'))
     parser.add_argument("--verisig_result_path", help="path to verisig result csv", default=os.path.join('uuv_output', 'uuv_broken_verisig_output.csv'))
     parser.add_argument("--sampled_result_path", help="path to sampling result csv", default=os.path.join('uuv_output', 'uuv_broken_sampling_output.csv'))
     parser.add_argument("--output_path", help="directory for all output files", default='uuv_output')
     args = parser.parse_args()
 
-    isari_main(args.verisig_result_path, args.sampled_result_path, args.network, args.output_path, benchmark=args.benchmark)
+    isari_main(args.verisig_result_path, args.sampled_result_path, args.network, args.output_path, benchmark=args.benchmark, small=str2bool(args.small))
