@@ -2,7 +2,7 @@
 
 ### Step 0: Start the Docker image
 
-This is the repeatability package for ICCPS 2025 Submission "Accelerating Neural Policy Repair with Preservation via Stability-Plasticity Interpolation", and its extension projects.
+This is the repeatability package for the ICCPS 2025 Submission "Accelerating Neural Policy Repair with Preservation via Stability-Plasticity Interpolation", and its extension projects.
 Please note: the following instructions are for the Dockerized application.
 
 **There is no need to pull any file from this repo.** The Docker image is available on our [Docker Hub repo](https://hub.docker.com/repository/docker/ericlupy/isar_interpolation).
@@ -20,14 +20,14 @@ This Docker image includes `Ubuntu 20.0.4`, `Python 3.8`, Verisig, and the requi
 please follow the instructions below.
 
 > #### Smoke Test Notice
-> For smoke test, we have alternative simple partitions: 6 regions for UUV and 4 for MC (instead of 2000 and 900). This can be enabled by setting `$IF_SMALL` to `True` in command line arguments (by default it is `False`).
-> The reason for this option is because running our experiment usually takes days, and this allows fast smoke test of each step.
+> For the smoke test, we have alternative simple partitions: 6 regions for UUV and 4 for MC (instead of 2000 and 900). This can be enabled by setting `$IF_SMALL` to `True` in command line arguments (by default it is `False`).
+> The reason for this option is that running our experiment usually takes days, and this allows a fast smoke test of each step.
 
 > #### Bash scripts
 > We provide end-to-end bash scripts. Each run is broken down into 3 scripts.
-> - Script 1: An end-to-end run from step 1 to 5.
-> - Script 2: Only calling Verisig and check the sampled initial states. This is for verification and sampling on flexible networks.
-> - Script 3: Visualization of results. This is for visualization of flexible networks.
+> - Script 1: An end-to-end run from steps 1 to 5.
+> - Script 2: Only calls Verisig and checks the sampled initial states. This is for verification and sampling on flexible networks.
+> - Script 3: Visualization of results. This is for the visualization of flexible networks.
 
 For example, to run a small smoke test trial for MC, call
 ```
@@ -74,27 +74,27 @@ After all regions are verified, we can parse the results by calling
 ```
 python3 verisig_parse_results.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --verisig_output_path="$PATH_TO_VERISIG_OUTPUT" --verisig_parsed_csv="$PATH_TO_VERISIG_PARSED_CSV" --initial_state_regions_csv="$PATH_TO_PARTITION_CSV"
 ```
-The verification of each region will be run in a subprocess, output to a txt log file.
-The verification results of all initial state regions will be parsed from Verisig logs and written to another csv file named `$PATH_TO_VERISIG_PARSED_CSV`.
+The verification of each region will be run in a subprocess and output to a txt log file.
+The verification results of all initial state regions will be parsed from Verisig logs and written to another CSV file named `$PATH_TO_VERISIG_PARSED_CSV`.
 Execution time of verifying each region will be recorded at the end of every txt log file.
 
 **Please notice that due to randomness (from random sampling of initial states per region and random perturbation in simulated annealing), the output may not necessarily be the same as in our paper.**
 
 ### Step 3: Incremental repair
 
-After verification on the to-be-repaired controller is done, we repair the controller by Incremental Simulated Annealing Repair with Interpolation (ISAR-I). 
+After verification of the to-be-repaired controller is done, we repair the controller using Incremental Simulated Annealing Repair with Interpolation (ISAR-I). 
 First, we uniformly sample initial states from each region.
 ```
 python3 sample_states_in_regions.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --initial_state_regions_path="$PATH_TO_PARTITION_CSV" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV" --num_samples_per_region="$N_SAMPLES"
 ```
 Here, we have
 
-- `$PATH_TO_SAMPLE_RESULT_CSV`: the path to a new csv file, where simulated results on the sampled initial states will be saved.
+- `$PATH_TO_SAMPLE_RESULT_CSV`: the path to a new CSV file, where simulated results on the sampled initial states will be saved.
 - `$N_SAMPLES`: the number of samples per region, by default 10.
 
 This will sample a fixed number of initial states per region and obtain STL robustness of each sampled state. The result will be written in the specified sampled result path as a csv.
 
-Next, with initial states sampled, we run the ISAR-I algorithm by calling
+Next, with the initial states sampled, we run the ISAR-I algorithm by calling
 ```
 python3 incremental_repair.py --benchmark="$BENCHMARK" --network="$PATH_TO_CONTROL_NETWORK_YML" --verisig_result_path="$PATH_TO_VERISIG_PARSED_CSV" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV" --output_path="$PATH_TO_OUTPUT"
 ```
@@ -120,24 +120,24 @@ By calling
 ```
 python3 visualization.py --benchmark="$BENCHMARK" --verisig_result_path="$PATH_TO_VERISIG_PARSED_CSV" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV" --small="$IF_SMALL"
 ```
-It will end up with a plot like the follows.
+It will end up with a plot like the following.
 
 ![UUV result example](figures/uuv_to_be_repaired_result.png)
 
-Configurations of this plot, such as title, ticks and size can be modified in `visualization.py`.
+Configurations of this plot, such as title, ticks, and size can be modified in `visualization.py`.
 This code will also output the number of the three types of regions,
-and the mean and std of min STL robustness in red, non-red and overall regions (as in our Table 1 and 3). 
-The figure will be saved as a png file, with the same name as `$PATH_TO_VERISIG_PARSED_CSV` but with suffix `.png`.
+and the mean and std of min STL robustness in red, non-red, and overall regions (as in our Tables 1 and 3). 
+The figure will be saved as a PNG file, with the same name as `$PATH_TO_VERISIG_PARSED_CSV` but with suffix `.png`.
 
 ### Baseline Methods
 We have implemented command line interfaces to run the baseline methods for both UUV and MC. Here, we use UUV as an example. 
-Notice that these baseline methods need the information of bad initial states in the to-be-repaired network, so please prepare sampled result csv file using `sample_states_in_regions.py` on the to-be-repaired network.
+Notice that these baseline methods need the information about bad initial states in the to-be-repaired network, so please prepare a sampled result CSV file using `sample_states_in_regions.py` on the to-be-repaired network.
 
 - STLGym
 ```
 python3 uuv_baselines/uuv_stlgym.py --algo="$RL_ALGO" --steps="$MAX_STEPS" --network="$PATH_TO_CONTROL_NETWORK_YML" --sampled_result_path="$PATH_TO_SAMPLE_RESULT_CSV"
 ```
-where `$RL_ALGO` can be one of `ppo`, `a2c` and `sac`, and `$MAX_STEPS` is the number of max training steps, by default 10^5. 
+where `$RL_ALGO` can be one of `ppo`, `a2c`, and `sac`, and `$MAX_STEPS` is the number of max training steps, by default 10^5. 
 The repaired network will be saved as both yml and pth as `uuv_baselines_stlgym_$RL_ALGO$/repaired_net.yml` and `uuv_baselines_stlgym_$RL_ALGO$/repaired_net.pth`.
 The yml file can then be evaluated in the same way.
 
@@ -164,4 +164,4 @@ This will call MIQP imitation on the labeled data generated by MPC shielding, in
 ```
 python3 uuv_baselines/uuv_imitation.py --data_path="$PATH_TO_MPC_PKL" --network="$PATH_TO_CONTROL_NETWORK_YML"  --epochs="$MAX_STEPS" --if_miqp=False
 ```
-This will call minimally deviating repair imitation, with output the same format as MIQP imitation.
+This will call minimally deviating repair imitation, with output in the same format as MIQP imitation.
