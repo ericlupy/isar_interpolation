@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="9cd16869-1b22-49ca-a9f3-07948994f680" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_mc.sh" beforeDir="false" afterPath="$PROJECT_DIR$/run_mc.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_small_uuv.sh" beforeDir="false" afterPath="$PROJECT_DIR$/run_small_uuv.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_uuv.sh" beforeDir="false" afterPath="$PROJECT_DIR$/run_uuv.sh" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
