@@ -209,8 +209,8 @@ def isari_main(verisig_result_path, sampled_result_path, net_path, output_path, 
             h_robustness_good += [robustness]
             h_robustness_good_prev += [robustness_prev]
 
-        if len(h_robustness_good_prev) > 0 and len(h_robustness_good) > 0:
-            print(f'Good states robustness before and after sim annealing, mean / min: {np.mean(h_robustness_good_prev)}, {np.min(h_robustness_good)}')
+        if len(h_robustness_good) > 0:
+            print(f'Good states robustness before and after sim annealing, mean / min: {np.mean(h_robustness_good)}, {np.min(h_robustness_good)}')
         print(f'Computing good states robustness takes {time.time() - t2}')
 
         if len(h_robustness_good) > 0 and np.min(h_robustness_good) >= 0.0:  # No good state broken
