@@ -132,6 +132,10 @@ The figure will be saved as a PNG file, with the same name as `$PATH_TO_VERISIG_
 ### Baseline Methods
 We have implemented command line interfaces to run the baseline methods for both UUV and MC. Here, we use UUV as an example. 
 Notice that these baseline methods need the information about bad initial states in the to-be-repaired network, so please prepare a sampled result CSV file using `sample_states_in_regions.py` on the to-be-repaired network.
+To run the baselines, please
+- Run the python command as follows for a baseline, to produce the repaired network yml file. 
+- Plug in the name of the repaired yml file in the `run_x_verisig.sh`, and optionally change the verisig output csv path, sampling output csv path, and output directory path. 
+- After the verification is finished, please plug in the Verisig output csv path and sampling output csv path to `run_x_visualize.sh` for final visualization.
 
 - STLGym
 ```
