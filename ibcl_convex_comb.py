@@ -36,8 +36,8 @@ def uuv_ibcl_convex_comb_binary_search(net_lo: UUV_Control_NN, net_hi: UUV_Contr
                                       init_global_heading_deg=good_state[1])
             h_robustness_good += [uuv_robustness(traj_y_good)]
 
-        if len(h_robustness_good) > 0:
-            print(f'Good states robustness after comb, min: {np.min(h_robustness_good)}')
+        # if len(h_robustness_good) > 0:
+        #     print(f'Good states robustness after comb, min: {np.min(h_robustness_good)}')
 
         if len(h_robustness_good) == 0 or np.min(h_robustness_good) < 0.0:  # Good state broken, step closer to old network
             w_hi = w_mid
@@ -52,8 +52,8 @@ def uuv_ibcl_convex_comb_binary_search(net_lo: UUV_Control_NN, net_hi: UUV_Contr
                                           init_global_heading_deg=bad_state[1])
             h_robustness_bad += [uuv_robustness(traj_y_bad)]
 
-        if len(h_robustness_bad) > 0:
-            print(f'Bad states robustness after comb, min: {np.min(h_robustness_bad)}')
+        # if len(h_robustness_bad) > 0:
+        #     print(f'Bad states robustness after comb, min: {np.min(h_robustness_bad)}')
 
         if len(h_robustness_bad) == 0 or np.max(h_robustness_bad) >= 0.0:  # No good state is broken and a bad state repaired, succeed
             print('Success')
@@ -102,8 +102,8 @@ def mc_ibcl_convex_comb_binary_search(net_lo: MC_Control_NN, net_hi: MC_Control_
             traj_pos_good, _ = mc_simulate(net=net_mid, pos_0=good_state[0], vel_0=good_state[1])
             h_robustness_good += [mc_robustness(traj_pos_good)]
 
-        if len(h_robustness_good) > 0:
-            print(f'Good states robustness after comb, min: {np.min(h_robustness_good)}')
+        # if len(h_robustness_good) > 0:
+        #     print(f'Good states robustness after comb, min: {np.min(h_robustness_good)}')
 
         if len(h_robustness_good) == 0 or np.min(h_robustness_good) < 0.0:  # Good state broken, step closer to old network
             w_hi = w_mid
@@ -117,8 +117,8 @@ def mc_ibcl_convex_comb_binary_search(net_lo: MC_Control_NN, net_hi: MC_Control_
             traj_pos_bad, _ = mc_simulate(net=net_mid, pos_0=bad_state[0], vel_0=bad_state[1])
             h_robustness_bad += [mc_robustness(traj_pos_bad)]
 
-        if len(h_robustness_bad) > 0:
-            print(f'Bad states robustness after comb, min: {np.min(h_robustness_bad)}')
+        # if len(h_robustness_bad) > 0:
+        #     print(f'Bad states robustness after comb, min: {np.min(h_robustness_bad)}')
 
         if len(h_robustness_bad) == 0 or np.max(h_robustness_bad) >= 0.0:  # No good state is broken and a bad state repaired, succeed
             print('Success')

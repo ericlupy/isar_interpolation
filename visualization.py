@@ -74,6 +74,8 @@ def check_min_robustness(sampled_result_path, dict_color):
     not_red_mask = df_sample['region'].apply(check_not_red)
     df_not_red= df_sample[not_red_mask]
 
+    print("Evaluating regions ... Notice that an empty set of regions will have nan mean and std. E.g. if all red regions are repaired, their mean and std will be nan.")
+
     # Aggregate by min on robustness, group by region
     df_red_min = df_red.join(df_red.groupby('region')['result'].agg(['min']), on='region')
     print(f'Min robustness of all red regions have mean: {df_red_min["min"].mean()}, std: {df_red_min["min"].std()}')
